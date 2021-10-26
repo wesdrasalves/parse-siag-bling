@@ -1,3 +1,7 @@
 clientes.txt
 clientes.csv
 clientes.json
+*.err
+*.json
+*.txt
+*.csv

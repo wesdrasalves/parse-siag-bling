@@ -2,10 +2,10 @@ const fs = require('fs')
 const path = require('path')
 const TypeLine = require('./enum')
 const {ParseLine, FormatNewLine} = require('./utils')
+const {ValidateClient, ValidateEmail} = require('./validations')
 
 const fileNameOrigem = 'clientes.txt'
-const fileNameJsonDestino = 'clientes.json'
-const fileNameCsvDestino = 'clientes.csv'
+const fileNameDestino = 'clientes'
 const saveJson = false;
 const saveCSV = true;
 
@@ -32,11 +32,17 @@ else{
         }     
   
         if(lineTypeCurrent != TypeLine.NAO_USADA){
+          if(lineTypeCurrent < TypeLine.EMAIL && ValidateEmail(strData[i].replace(/\n/g,''))){
+            lineTypeCurrent= TypeLine.EMAIL;
+          }
+
+          //Pego o pase pelo tipo da linha
           const parseObj = ParseLine[lineTypeCurrent];
-  
+
           objectLine[objectLine.length-1] = {...objectLine[objectLine.length-1], ...parseObj(strData[i])} 
           lineTypeCurrent++;
   
+
           if(lineTypeCurrent > TypeLine.EMAIL){
             lineTypeCurrent= TypeLine.NAO_USADA;
           }
@@ -49,7 +55,7 @@ else{
   
   
     if(saveJson){
-      fs.writeFile(path.join('.',fileNameJsonDestino),JSON.stringify(objectLine),'utf8', (err) =>{
+      fs.writeFile(path.join('.',`${fileNameDestino}.json`),JSON.stringify(objectLine),'utf8', (err) =>{
         if(!err){
           console.log('Criação de arquivo Json efetuado com sucesso.')
         }
@@ -61,14 +67,43 @@ else{
     }
   
     if(saveCSV){
-      const csvClientes = objectLine.map(cliente => FormatNewLine(cliente)).join('\r\n');
-  
-      fs.writeFile(path.join('.',fileNameCsvDestino),csvClientes,'utf8', (err) =>{
+      const validClients = [];
+      const invalidClients = [];
+
+      objectLine.forEach(client => {
+        try{
+          ValidateClient(client)
+          validClients.push(client);
+        }
+        catch(ex){
+          client.comment = ex;
+          invalidClients.push(client);
+        }
+      })
+
+
+      //Cria arquivo CSV com clientes validos
+      const csvClientes = validClients.map(cliente => FormatNewLine(cliente)).join('\r\n');
+      
+      fs.writeFile(path.join('.',`${fileNameDestino}.csv`),csvClientes.replace(/undefined/g,''),'utf8', (err) =>{
         if(!err){
           console.log('Criação de arquivo CSV efetuado com sucesso.')
         }
         else{
           console.log('Erro na criação de arquivo CSV.')
+          console.log(err);
+        }
+      })
+
+      //Cria arquivo CSV de clientes invalidos
+      const csvClientesInvalidos = invalidClients.map(cliente => FormatNewLine(cliente)).join('\r\n');
+      
+      fs.writeFile(path.join('.',`${fileNameDestino}.err.csv`),csvClientesInvalidos.replace(/undefined/g,''),'utf8', (err) =>{
+        if(!err){
+          console.log('Criação de arquivo CSV de dados inválidos efetuado com sucesso.')
+        }
+        else{
+          console.log('Erro na criação de arquivo CSV de dados inválidos.')
           console.log(err);
         }
       })

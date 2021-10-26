@@ -47,7 +47,7 @@ const parseEndereco = function(line){
           cidade: cidade.trim(),
           uf: uf.trim(),
           cep: cep.trim(),
-          telefone: telefone.trim(),
+          telefone: telefone.trim().replace(/ /g,'') == '()-' ? '' : telefone,
           contato: contato.trim()
         };
 } 
@@ -70,13 +70,13 @@ const FormatNewLine = function (objectLine){
   const {codigo, razao, endereco,
     bairro,cidade,uf,cep,telefone,contato,
     cpfCnpj, tipoPessoa, inscricaoEstadual, nomeFantazia,
-    email} = objectLine
+    email,comment} = objectLine
 
-  return `"${codigo}";"${codigo}";"${razao}";"${nomeFantazia || ''}";"${endereco}";"";"";"${bairro}";"${cep}";"${cidade}";"${uf}";"${contato}";"${telefone}";"";"";"${email || ''}";"";"${tipoPessoa=='PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}";"${cpfCnpj || ''}";"${inscricaoEstadual || ''}";"";"Ativo"${';""'.repeat(19)}`;
+  return `"${codigo}";"${codigo}";"${razao}";"${nomeFantazia || ''}";"${endereco}";"";"";"${bairro}";"${cep}";"${cidade}";"${uf}";"${contato}";"${telefone}";"";"";"${email || ''}";"";"${tipoPessoa=='PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}";"${cpfCnpj || ''}";"${inscricaoEstadual || ''}";"";"Ativo";"${comment || ''}"${';""'.repeat(18)}`;
 }
 
 
 module.exports ={
   ParseLine,
-  FormatNewLine
+  FormatNewLine,
 } ;
